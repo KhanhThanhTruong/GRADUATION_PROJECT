@@ -48,7 +48,7 @@ void parsePMData(uint8_t *data) {
 }
 
 void setup() {
-    Serial.begin(UART_BAUD);
+    Serial.begin(UART_BAUD_PMS700);
     delay(1000); // Chờ 1 giây cho module khởi động
 
     Serial.println("PMS7003 setup complete");

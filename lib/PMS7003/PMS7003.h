@@ -25,7 +25,7 @@
 #define ACTIVE_BIT 7
 #define PASSIVE_BIT 6
 #define SLEEP_BIT 5
-#define UART_BAUD 9600
+#define UART_BAUD_PMS7003 9600
 #define TIMEOUT 100
 #define START_CHAR1 0x42
 #define START_CHAR2 0X4D
@@ -46,6 +46,21 @@ enum MODE_NAME
     SLEEP_MODE,
     WAKE_MODE,
     UNKOWN_MODE
+};
+enum ERROR_DECODE_PMS7003
+{
+    NO_ERROR,
+    // FRAME_ERROR,
+    CHECKSUM_ERROR,
+    // TIMEOUT_ERROR,
+    // NO_DATA_ERROR,
+    START_CHAR_ERROR
+};
+
+enum SETMODE_NOTIFI
+{
+    SET_MODE_SUCCESS,
+    SET_MODE_FAIL
 };
 
 enum DATA_TARGET
@@ -77,15 +92,17 @@ private:
     uint8_t data[FRAME_LENGTH];
     uint8_t checksum;
     uint16_t pm1_0, pm2_5, pm10, pm1_0_atm, pm2_5_atm, pm10_atm;
-
+    
+    // void sendMSG_to_user(char* msg);
 public:
     PMS7003(int8_t RX, int8_t TX);
     void init();
-    void setMode(MODE_NAME mode);
+    SETMODE_NOTIFI setMode(MODE_NAME mode);
     uint8_t *readData();
-    void decodeData();
+    ERROR_DECODE_PMS7003 decodeData();
     uint16_t getData(DATA_TARGET data);
     MODE_NAME getMode();
+    void setalldatatozero();
 };
 
 #endif
