@@ -8,7 +8,7 @@ void setup()
     Serial.begin(9600);
     pms7003.init();
     // delay(500);
-    pms7003.setMode(ACTIVE_MODE);
+    pms7003.setMode(PASSIVE_MODE);
     // delay(100);
 
   // Serial.begin(9600);
@@ -25,17 +25,25 @@ void loop()
   // }
   
   // delay(300);
-  uint8_t *data = pms7003.readData();
+  uint8_t *data = pms7003.readBytes();
+  if(data == nullptr)
+  {
+    Serial.println("No data");
+    delay(3000);
+    return;
+  }
   for(int i=0;i<FRAME_LENGTH;i++)
   {
-    Serial.print(data[i],HEX);
+    Serial.printf("BYTE %d:",i);
+    Serial.println(data[i],HEX);
   }
   Serial.println();
+  pms7003.decodeData();
   delay(3000);
   // if(data == nullptr)
   // {
   //   Serial.println("No data");
-  //   pms7003.setMode(ACTIVE_MODE);
+  //   // pms7003.setMode(ACTIVE_MODE);
   //   return;
   // }
 

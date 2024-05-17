@@ -116,7 +116,7 @@ MODE_NAME PMS7003::getMode()
 
 void PMS7003::setalldatatozero()
 {
-    for(int i=0;i<FRAME_LENGTH;i++)
+    for (int i = 0; i < FRAME_LENGTH; i++)
     {
         data[i] = 0x00;
     }
@@ -127,23 +127,26 @@ void PMS7003::setalldatatozero()
     pm2_5_atm = 0;
     pm10_atm = 0;
 }
-uint8_t *PMS7003::readData()
+uint8_t *PMS7003::readBytes()
 {
+
     uint32_t start_time = millis();
     while (true)
     {
-        if (Serial2.available() >= FRAME_LENGTH)
+        if (Serial2.available())
         {
-            // Serial2.readBytes(data, FRAME_LENGTH);
-            for(int i=0;i<FRAME_LENGTH;i++)
+            if (Serial2.read() == START_CHAR1 && Serial2.read() == START_CHAR2)
             {
-                data[i]=Serial2.read();
+                data[0] = START_CHAR1;
+                data[1] = START_CHAR2;
+                if (Serial2.available() >= FRAME_LENGTH - 2)
+                    for (int i = 2; i < FRAME_LENGTH; i++)
+                    {
+                        data[i] = Serial2.read();
+                    }
+                return data;
             }
-            // Serial2.readBytesUntil(42, data, FRAME_LENGTH);
-            // decodeData();
-            return data;
         }
-        
         if (millis() - start_time > TIMEOUT)
         {
             // Serial.println("PMS7003 TIMEOUT");
@@ -153,9 +156,29 @@ uint8_t *PMS7003::readData()
     }
 }
 
+uint8_t *PMS7003::readBytesBaseOnMode()
+{
+    switch (getMode())
+    {
+    case ACTIVE_MODE:
+        return readBytes();
+        break;
+    case PASSIVE_MODE:
+        if (Serial2.availableForWrite())
+        {
+            Serial2.write(PASSIVE_REQUEST_DATA, CMD_LENGTH);
+            delay(TIME_WAIT_PASSIVE_REQUEST_DATA);
+        }
+        return readBytes();
+    default:
+        return nullptr;
+        break;
+    }
+}
+
 ERROR_DECODE_PMS7003 PMS7003::decodeData()
 {
-    
+
     // Check 2 bytes start
     if (data[0] != START_CHAR1 || data[1] != START_CHAR2)
     {
@@ -172,6 +195,10 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
         sum += data[i];
     }
     uint16_t checksum = (data[FRAME_LENGTH - 2] << 8) | data[FRAME_LENGTH - 1];
+    Serial.print("CHECK SUM: ");
+    Serial.println(checksum);
+    Serial.print("CHECKSUM CALC: ");
+    Serial.println(sum);
     if (sum != checksum)
     {
         // if (Serial.availableForWrite())

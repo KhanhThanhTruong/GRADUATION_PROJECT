@@ -39,6 +39,7 @@
 #define PM10_LOW_BYTE 9
 #define TIME_WAIT_START 1000
 #define TIME_WAIT_SET_MODE 100
+#define TIME_WAIT_PASSIVE_REQUEST_DATA 100
 enum MODE_NAME
 {
     ACTIVE_MODE,
@@ -96,13 +97,33 @@ private:
     // void sendMSG_to_user(char* msg);
 public:
     PMS7003(int8_t RX, int8_t TX);
+    //Function init PMS7003
+    //Function set Baudrate, RX, TX of PMS7003
     void init();
+    //Function set mode of PMS7003
+    //Return SET_MODE_SUCCESS if success
+    //Return SET_MODE_FAIL if fail
     SETMODE_NOTIFI setMode(MODE_NAME mode);
-    uint8_t *readData();
+    //Function read 32 bytes from PMS7003 start with start char 1 and 2
+    //Return nullptr if timeout and not enough data
+    uint8_t *readBytes();
+    //Function decode 32 bytes from PMS7003
+    //Return ERROR_DECODE_PMS7003 if error
+    //Return NO_ERROR if no error 
     ERROR_DECODE_PMS7003 decodeData();
+    //Function get data from PMS7003
+    //Return 0 if data not ready
     uint16_t getData(DATA_TARGET data);
+    //Function get mode from PMS7003
     MODE_NAME getMode();
+    //Function set 32 bytes previous to zero
+    //Function set all pm to zero
     void setalldatatozero();
+
+    //Function read data base on mode
+    //Return data
+    //Return nullptr if timeout or mode is sleep
+    uint8_t* readBytesBaseOnMode();
 };
 
 #endif
