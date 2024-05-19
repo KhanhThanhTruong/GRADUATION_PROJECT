@@ -1,65 +1,76 @@
+#include <Wire.h>
 #include <Arduino.h>
-#include <PMS7003.h>
+#include <SHT3x.h>
 
-PMS7003 pms7003(GPIO_NUM_22, GPIO_NUM_23);
+SHT3x sht(SHT3x_I2C_ADDRESS_DEFAULT);
+// To use a specific sensor instead of probing the bus use this command:
+// SHTSensor sht(SHTSensor::SHT3X);
 
 void setup()
 {
-    Serial.begin(9600);
-    pms7003.init();
-    // delay(500);
-    pms7003.setMode(PASSIVE_MODE);
-    // delay(100);
+  // put your setup code here, to run once:
 
-  // Serial.begin(9600);
-  // Serial2.begin(9600, SERIAL_8N1, GPIO_NUM_22, GPIO_NUM_23);
+  // Wire.begin();
+  Serial.begin(9600);
+  sht.init();
+
+  while (sht.setMode(MODE_SHT_SINGLESHOT) == false)
+  {
+    Serial.println("SET MODE FAIL");
+    delay(1000);
+  }
 }
 
 void loop()
 {
-  // char c;
-  // if(Serial2.available())
-  // {
-  //   c=Serial2.read();
-  //   Serial.print(c);
-  // }
-  
-  // delay(300);
-  uint8_t *data = pms7003.readBytes();
-  if(data == nullptr)
+  // put your main code here, to run repeatedly:
+
+  switch (sht.readBytes())
   {
-    Serial.println("No data");
-    delay(3000);
+  case COMMUNITCATION_FAILED:
+    Serial.println("COMMUNICATION FAILED");
+    delay(1000);
     return;
+    // break;
+  case DATA_READ_FAILED:
+    Serial.println("DATA READ FAILED");
+    delay(1000);
+    return;
+  default:
+    Serial.println("DATA READ OK");
+    break;
   }
-  for(int i=0;i<FRAME_LENGTH;i++)
+
+  // uint8_t *data = sht.getdata();
+
+  // for (int i = 0; i < 6; i++)
+  // {
+  //   Serial.print(data[i], HEX);
+  //   Serial.print(" ");
+  // }
+
+  // Serial.println();
+
+  switch (sht.decode())
   {
-    Serial.printf("BYTE %d:",i);
-    Serial.println(data[i],HEX);
+  case DATA_ZERO:
+    Serial.println("DATA ZERO");
+    delay(1000);
+    return;
+    break;
+  case CHECKSUM_ERROR:
+    Serial.println("CHECKSUM ERROR");
+    delay(1000);
+    return;
+    break;
+  default:
+    break;
   }
-  Serial.println();
-  pms7003.decodeData();
-  delay(3000);
-  // if(data == nullptr)
-  // {
-  //   Serial.println("No data");
-  //   // pms7003.setMode(ACTIVE_MODE);
-  //   return;
-  // }
 
-  // switch (pms7003.decodeData())   
-  // {
+  Serial.print("Temperature: ");
+  Serial.println(sht.get(TEMPERATURE));
+  Serial.print("Humidity: ");
+  Serial.println(sht.get(HUMIDITY));
 
-  // case START_CHAR_ERROR:
-  //   Serial.println("Start char error");
-  //   break;
-  // case CHECKSUM_ERROR:
-  //   Serial.println("Checksum error");
-  //   break;
-  // default:
-  //   Serial.println("No error");
-  //   break;
-  // }
-  // Serial.println(pms7003.getData(PM1_0));
-  // delay(5000);
+  delay(5000);
 }

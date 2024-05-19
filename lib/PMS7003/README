@@ -1,0 +1,13 @@
+To use PMS7003 Lib
+    Connect your PMS7003 to RX, TX pin you want to config
+
+    Step 1: Declare object of PMS7003 class
+        Ex: PMS7003 pms(RX_pin,TX_pin);
+    Step 2: Set Mode ACTIVE or PASSIVE, ACTIVE Mode data is sent regularly, PASSIVE mode data is sent from PMS7003 whether send REQUEST.
+        Ex: pms.setMode(ACTIVE_MODE);
+    Step 3: Read 32 bytes from PMS7003
+        Ex: pms.readBytesBaseOnMode();
+    Step 4: Decode data
+        Ex: pms.decode();
+    Step 5: Get pm
+        Ex: pms.getData(DATA_TARGET);
