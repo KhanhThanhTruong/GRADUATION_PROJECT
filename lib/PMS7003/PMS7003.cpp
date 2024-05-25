@@ -204,7 +204,7 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
         // if (Serial.availableForWrite())
         // Serial.println("PMS7003 CHECKSUM ERROR");
         setalldatatozero();
-        return CHECKSUM_ERROR;
+        return CHECKSUM_ERROR_PMS;
     }
 
     pm1_0 = (data[4] << 8) | data[5];
@@ -215,18 +215,18 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
     pm2_5_atm = (data[12] << 8) | data[13];
     pm10_atm = (data[14] << 8) | data[15];
 
-    return NO_ERROR;
+    return NO_ERROR_PMS;
 }
 
 uint16_t PMS7003::getData(DATA_TARGET target)
 {
     switch (target)
     {
-    case PM1_0:
+    case PM1_0_PMS:
         return pm1_0;
-    case PM2_5:
+    case PM2_5_PMS:
         return pm2_5;
-    case PM10:
+    case PM10_PMS:
         return pm10;
     case PM1_0_ATM:
         return pm1_0_atm;

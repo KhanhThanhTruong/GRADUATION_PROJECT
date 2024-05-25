@@ -50,9 +50,9 @@ enum MODE_NAME
 };
 enum ERROR_DECODE_PMS7003
 {
-    NO_ERROR,
+    NO_ERROR_PMS,
     // FRAME_ERROR,
-    CHECKSUM_ERROR,
+    CHECKSUM_ERROR_PMS,
     // TIMEOUT_ERROR,
     // NO_DATA_ERROR,
     START_CHAR_ERROR
@@ -66,9 +66,9 @@ enum SETMODE_NOTIFI
 
 enum DATA_TARGET
 {
-    PM1_0,
-    PM2_5,
-    PM10,
+    PM1_0_PMS,
+    PM2_5_PMS,
+    PM10_PMS,
     PM1_0_ATM,
     PM2_5_ATM,
     PM10_ATM

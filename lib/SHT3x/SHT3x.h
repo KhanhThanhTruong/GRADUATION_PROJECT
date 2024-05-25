@@ -37,8 +37,8 @@ enum MPS_SHT3x
 };
 enum DATA_SHT3x_TARGET
 {
-    TEMPERATURE ,
-    HUMIDITY, 
+    TEMPERATURE_SHT ,
+    HUMIDITY_SHT
     
 };
 enum MODE_SHT3x_NAME

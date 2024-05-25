@@ -188,10 +188,10 @@ float SHT3x::get(DATA_SHT3x_TARGET target)
 {
     switch (target)
     {
-    case TEMPERATURE:
+    case TEMPERATURE_SHT:
         return _temperature;
         break;
-    case HUMIDITY:
+    case HUMIDITY_SHT:
         return _humidity;
         break;
 
