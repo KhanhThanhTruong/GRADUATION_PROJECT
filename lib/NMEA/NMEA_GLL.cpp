@@ -41,6 +41,7 @@ NMEA_GLL::NMEA_GLL(string buffer, int GMT) : GLL_STRING(buffer), GMT(GMT)
     {
         valid = false;
         output << "ERROR: " << "INVALID CHECKSUM" << endl;
+        output << "CALCULATED CHECKSUM: " << result << endl;
         return;
     }
     else
@@ -126,5 +127,10 @@ string NMEA_GLL::get(NMEA_ATRIBUTE obj)
         return "UNKNOWN ATTRIBUTE";
         break;
     }
-
 }
+
+// int main()
+// {
+//     NMEA_GLL nmea("$PSRF100,0,115200,8,1,0*0C", 7);
+//     std::cout << nmea.get(LATTITUDE);
+// }

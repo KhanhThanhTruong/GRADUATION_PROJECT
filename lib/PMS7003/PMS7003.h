@@ -19,6 +19,7 @@
 #define PMS7003_H
 
 #include <Arduino.h>
+#include <SoftwareSerial.h>
 
 #define CMD_LENGTH 7
 #define FRAME_LENGTH 32
@@ -88,6 +89,7 @@ const uint8_t WAKE[CMD_LENGTH] = {0x42, 0x4D, 0xE4, 0x00, 0x01, 0x01, 0x74};
 class PMS7003
 {
 private:
+    SoftwareSerial _pms_serial;
     uint8_t mode;
     int8_t _rx, _tx;
     uint8_t data[FRAME_LENGTH];
@@ -96,6 +98,7 @@ private:
     
     // void sendMSG_to_user(char* msg);
 public:
+    //Constructor _rx,__tx
     PMS7003(int8_t RX, int8_t TX);
     //Function init PMS7003
     //Function set Baudrate, RX, TX of PMS7003

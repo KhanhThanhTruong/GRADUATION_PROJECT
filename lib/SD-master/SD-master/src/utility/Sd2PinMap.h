@@ -31,19 +31,19 @@
 
 #endif // Sd2PinMap_h
 
-#elif defined(ESP32)
+// #elif defined(ESP32)
 
-#ifndef Sd2PinMap_h
-  #define Sd2PinMap_h
+// #ifndef Sd2PinMap_h
+//   #define Sd2PinMap_h
 
-  #include <Arduino.h>
+//   #include <Arduino.h>
 
-  uint8_t const SS_PIN = 5;
-  uint8_t const MOSI_PIN = 23;
-  uint8_t const MISO_PIN = 19;
-  uint8_t const SCK_PIN = 18;
+//   uint8_t const SS_PIN = SS;
+//   uint8_t const MOSI_PIN = 23;
+//   uint8_t const MISO_PIN = 19;
+//   uint8_t const SCK_PIN = 18;
 
-#endif // Sd2PinMap_h
+// #endif // Sd2PinMap_h
 
 #elif defined(__AVR_ATmega4809__) || defined(__AVR_ATmega4808__) || \
 defined(__AVR_ATmega3209__) || defined(__AVR_ATmega3208__) || \

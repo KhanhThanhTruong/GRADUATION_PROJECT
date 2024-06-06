@@ -185,7 +185,22 @@ ERROR_SHT3x_READ SHT3x::decode()
 }
 
 float SHT3x::get(DATA_SHT3x_TARGET target)
-{
+{   
+    if(readBytes() != NO_ERROR)
+    {
+        if(Serial.availableForWrite())
+        {
+            Serial.println("ERROR: READ DATA FROM SHT3x FAILED");
+        }
+    }
+    if(decode() != NO_ERROR)
+    {
+        if(Serial.availableForWrite())
+        {
+            Serial.println("ERROR: DECODE DATA FROM SHT3x FAILED");
+        }
+    }
+    // decode();
     switch (target)
     {
     case TEMPERATURE_SHT:

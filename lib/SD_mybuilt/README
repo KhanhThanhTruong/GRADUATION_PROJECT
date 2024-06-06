@@ -1,0 +1,6 @@
+How to use SD_mybuit.h ?
+
+Step 1 :    SD_JS::init();
+Step 2 :    Creat json name "js" have key "time" = "2025/05/28T16:27:00Z" ;
+Step 3 :    SD_JS::pushData(js);
+            Json data will be save in file "2025/05/28/16.json"

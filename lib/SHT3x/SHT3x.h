@@ -74,6 +74,7 @@ class SHT3x
     //Get current mode
     MODE_SHT3x_NAME getMode();
     //Read 6 bytes from SHT3x and storage to data
+    //Return NO_ERROR if success
     ERROR_SHT3x_READ readBytes();
     //Decode 6 bytes from SHT3x to temperature and humidity
     //Return NO_ERROR if success
@@ -84,7 +85,7 @@ class SHT3x
     float get(DATA_SHT3x_TARGET target);
     //Set all data to zero
     void setalltozero();
-
+    //Get byte string from SHT3x
     uint8_t *getdata();
 
 

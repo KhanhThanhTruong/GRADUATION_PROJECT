@@ -20,16 +20,16 @@ PMS7003::PMS7003(int8_t rx, int8_t tx)
 
 SETMODE_NOTIFI PMS7003::setMode(MODE_NAME mode_type)
 {
-    if (Serial2.availableForWrite())
+    if (_pms_serial.availableForWrite())
     {
         switch (mode_type)
         {
         case ACTIVE_MODE:
             if (getMode() != ACTIVE_MODE)
             {
-                if (Serial2.availableForWrite())
+                if (_pms_serial.availableForWrite())
                 {
-                    Serial2.write(ACTIVE, CMD_LENGTH);
+                    _pms_serial.write(ACTIVE, CMD_LENGTH);
                     mode = (1 << ACTIVE_BIT);
                 }
                 else
@@ -42,9 +42,9 @@ SETMODE_NOTIFI PMS7003::setMode(MODE_NAME mode_type)
         case PASSIVE_MODE:
             if (getMode() != PASSIVE_MODE)
             {
-                if (Serial2.availableForWrite())
+                if (_pms_serial.availableForWrite())
                 {
-                    Serial2.write(PASSIVE, CMD_LENGTH);
+                    _pms_serial.write(PASSIVE, CMD_LENGTH);
                     mode = (1 << PASSIVE_BIT);
                 }
                 else
@@ -56,9 +56,9 @@ SETMODE_NOTIFI PMS7003::setMode(MODE_NAME mode_type)
         case SLEEP_MODE:
             if (getMode() != SLEEP_MODE)
             {
-                if (Serial2.availableForWrite())
+                if (_pms_serial.availableForWrite())
                 {
-                    Serial2.write(PASSIVE, CMD_LENGTH);
+                    _pms_serial.write(PASSIVE, CMD_LENGTH);
                     mode = (1 << PASSIVE_BIT);
                 }
                 else
@@ -70,9 +70,9 @@ SETMODE_NOTIFI PMS7003::setMode(MODE_NAME mode_type)
         case WAKE_MODE:
             if (getMode() == SLEEP_MODE)
             {
-                if (Serial2.availableForWrite())
+                if (_pms_serial.availableForWrite())
                 {
-                    Serial2.write(WAKE, CMD_LENGTH);
+                    _pms_serial.write(WAKE, CMD_LENGTH);
                     mode = mode & ~(1 << SLEEP_BIT);
                 }
                 else
@@ -93,7 +93,8 @@ SETMODE_NOTIFI PMS7003::setMode(MODE_NAME mode_type)
 
 void PMS7003::init()
 {
-    Serial2.begin(UART_BAUD_PMS7003, SERIAL_8N1, _rx, _tx);
+
+    _pms_serial.begin(UART_BAUD_PMS7003, SWSERIAL_8N1, _rx, _tx);
     // Serial.begin(UART_BAUD_PMS7003);
     if (Serial.availableForWrite())
     {
@@ -133,16 +134,16 @@ uint8_t *PMS7003::readBytes()
     uint32_t start_time = millis();
     while (true)
     {
-        if (Serial2.available())
+        if (_pms_serial.available())
         {
-            if (Serial2.read() == START_CHAR1 && Serial2.read() == START_CHAR2)
+            if (_pms_serial.read() == START_CHAR1 && _pms_serial.read() == START_CHAR2)
             {
                 data[0] = START_CHAR1;
                 data[1] = START_CHAR2;
-                if (Serial2.available() >= FRAME_LENGTH - 2)
+                if (_pms_serial.available() >= FRAME_LENGTH - 2)
                     for (int i = 2; i < FRAME_LENGTH; i++)
                     {
-                        data[i] = Serial2.read();
+                        data[i] = _pms_serial.read();
                     }
                 return data;
             }
@@ -164,9 +165,17 @@ uint8_t *PMS7003::readBytesBaseOnMode()
         return readBytes();
         break;
     case PASSIVE_MODE:
-        if (Serial2.availableForWrite())
+
+        while (_pms_serial.available())
         {
-            Serial2.write(PASSIVE_REQUEST_DATA, CMD_LENGTH);
+            _pms_serial.read(); // Clean RX buffer
+        }
+        _pms_serial.write(PASSIVE_REQUEST_DATA, CMD_LENGTH); // Read in passive mode
+        _pms_serial.flush();//Make sure that send data is complete
+
+        if (_pms_serial.availableForWrite())
+        {
+            _pms_serial.write(PASSIVE_REQUEST_DATA, CMD_LENGTH);
             delay(TIME_WAIT_PASSIVE_REQUEST_DATA);
         }
         return readBytes();
@@ -195,10 +204,10 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
         sum += data[i];
     }
     uint16_t checksum = (data[FRAME_LENGTH - 2] << 8) | data[FRAME_LENGTH - 1];
-    Serial.print("CHECK SUM: ");
-    Serial.println(checksum);
-    Serial.print("CHECKSUM CALC: ");
-    Serial.println(sum);
+    // Serial.print("CHECK SUM: ");
+    // Serial.println(checksum);
+    // Serial.print("CHECKSUM CALC: ");
+    // Serial.println(sum);
     if (sum != checksum)
     {
         // if (Serial.availableForWrite())
@@ -220,6 +229,21 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
 
 uint16_t PMS7003::getData(DATA_TARGET target)
 {
+    if (readBytesBaseOnMode() == nullptr)
+    {
+        if (Serial.availableForWrite())
+        {
+            Serial.println("ERROR: READ DATA FROM PMS7003 FAILED ");
+        }
+    }
+
+    if (decodeData() != NO_ERROR_PMS)
+    {
+        if (Serial.availableForWrite())
+        {
+            Serial.println("ERROR: DECODE DATA FROM PMS7003 FAILED ");
+        }
+    }
     switch (target)
     {
     case PM1_0_PMS:
