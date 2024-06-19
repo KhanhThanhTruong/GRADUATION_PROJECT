@@ -11,16 +11,16 @@ void NEO6M::init()
 char *NEO6M::getGLL()
 {
     POSITION_NMEA = 0;
-    // unsigned long startTime = millis(); // Start tracking time
+    unsigned long startTime = millis(); // Start tracking time
     unsigned long timeout = 2000;        // 100ms timeout
 
     while (true)
     {
         // Check if the elapsed time has reached the timeout
-        // if (millis() - startTime >= timeout)
+        if (millis() - startTime >= timeout)
         {
             // Exit the loop if 100ms have passed
-            // break;
+            break;
         }
 
         if (_gps.available())
@@ -28,7 +28,7 @@ char *NEO6M::getGLL()
             char c = _gps.read();
 
             // Reset the start time when data is received
-            // startTime = millis();
+            startTime = millis();
 
             // Check if the current character matches the expected character in the prefix
             if (c == PREFIX_NMEA[POSITION_NMEA])
@@ -59,13 +59,13 @@ char *NEO6M::getGLL()
 
     // char GLL_error_str[]="#";
     // If the loop exits due to timeout, return a special value or handle appropriately
-    return nullptr; // Or another value appropriate for your context
+    return "#"; // Or another value appropriate for your context
 }
 
 const char *NEO6M::get(NMEA_ATRIBUTE attribute)
 {
     string GLL_buf = string(getGLL());
-    if (GLL_buf == string(nullptr))
+    if (GLL_buf == "#")
     {
         return "#";
     }

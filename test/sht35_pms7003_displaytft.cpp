@@ -30,8 +30,8 @@
 #define TFT_CLK 18
 #define TFT_RST 5
 #define TFT_MISO 19
-#define UART_PMS7003_RX 12
-#define UART_PMS7003_TX 13
+#define UART_PMS7003_RX 17
+#define UART_PMS7003_TX 16
 // If using the breakout, change pins as desired
 Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_MOSI, TFT_CLK, TFT_RST, TFT_MISO);
 SHT3x sht(SHT3x_I2C_ADDRESS_DEFAULT);

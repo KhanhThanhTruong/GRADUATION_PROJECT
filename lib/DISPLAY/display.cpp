@@ -46,6 +46,7 @@ void display::SHT(float temp, float humi)
     i = COMPONENT_DISPLAY::HUMIDITY;
     // Set up color base on threshold
     tft.setTextColor(color(humi, COMPONENT_DISPLAY::HUMIDITY));
+    tft.setCursor(FIRST_LINE_X, FIRST_LINE_Y + i * LINE_WIDTH);
     tft.print(title[i]);
     del(7, ILI9341_BLACK);
     tft.printf("%4.2f ", humi);

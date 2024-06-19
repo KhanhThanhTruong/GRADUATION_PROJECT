@@ -3,6 +3,13 @@
 String SD_JS::pushData(const char *filename, StaticJsonDocument<200> js)
 {
     // SD.begin(5);
+    // if the file doesn't exist, create it
+    if(!SD.exists(filename))
+    {
+        SD.open(filename, FILE_WRITE);
+    }
+
+    // open the file
     File myFile = SD.open(filename, FILE_APPEND);
     if (!myFile)
     {
