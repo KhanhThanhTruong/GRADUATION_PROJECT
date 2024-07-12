@@ -4,7 +4,7 @@ String SD_JS::pushData(const char *filename, StaticJsonDocument<200> js)
 {
     // SD.begin(5);
     // if the file doesn't exist, create it
-    if(!SD.exists(filename))
+    if (!SD.exists(filename))
     {
         SD.open(filename, FILE_WRITE);
     }
@@ -50,26 +50,72 @@ String SD_JS::pushData(StaticJsonDocument<200> js)
 
 String SD_JS::getData(const char *filename, StaticJsonDocument<200> &js)
 {
+    // Mở file để đọc
     File myfile = SD.open(filename, FILE_READ);
     if (!myfile)
     {
         return "OPEN FILE FAILED";
     }
 
-    // if the file opened okay, read from it
-    String js_str = myfile.readStringUntil('\n');
+    // Đọc dòng đầu tiên
+    String firstLine = myfile.readStringUntil('\n');
     myfile.close();
-    // Convert String to Json
-    // StaticJsonDocument<200> js;
-    DeserializationError error = deserializeJson(js, js_str);
+
+    return firstLine;
+}
+
+String SD_JS::readAndDeleteLine(const char *filename, StaticJsonDocument<200> &js)
+{
+    // Mở file để đọc
+    File myfile = SD.open(filename, FILE_READ);
+    if (!myfile)
+    {
+        return "OPEN FILE FAILED";
+    }
+
+    // Đọc dòng đầu tiên
+    String firstLine = myfile.readStringUntil('\n');
+    if (firstLine.length() == 0)
+    {
+        myfile.close();
+        SD.remove(filename);
+        return "END OF FILE";
+    }
+
+    // Đọc phần còn lại của file vào một String
+    String remainingData;
+    while (myfile.available())
+    {
+        remainingData += myfile.readStringUntil('\n') + "\n";
+    }
+    myfile.close();
+
+    // Xóa file hiện tại
+    if (!SD.remove(filename))
+    {
+        return "DELETE FILE FAILED";
+    }
+
+    // Ghi phần còn lại của file vào một file mới
+    myfile = SD.open(filename, FILE_WRITE);
+    if (!myfile)
+    {
+        return "REOPEN FILE FAILED";
+    }
+    myfile.print(remainingData);
+    myfile.close();
+
+    // Chuyển đổi dòng đầu tiên sang JSON
+    DeserializationError error = deserializeJson(js, firstLine);
     if (error)
     {
         return "ERROR: " + String(error.c_str());
     }
     else
-        return "GET JSON SUCCESS";
+    {
+        return "READ AND DELETE LINE SUCCESS";
+    }
 }
-
 std::string SD_JS::creatfile(std::string dir)
 { // /2024/05/28/16.json
     if (SD.exists(dir.c_str()))
@@ -132,7 +178,7 @@ String SD_JS::deleteFile(const char *filename)
     }
 }
 
-String SD_JS::init(uint8_t cs_pin)
+String SD_JS::init(const int cs_pin)
 {
     if (!SD.begin(cs_pin))
     {

@@ -1,29 +1,23 @@
-/*
-  SD card read/write
-
-  This example shows how to read and write data to and from an SD card file
-  The circuit. Pin numbers reflect the default
-  SPI pins for Uno and Nano models:
-   SD card attached to SPI bus as follows:
- ** SDO - pin 11
- ** SDI - pin 12
- ** CLK - pin 13
- ** CS - pin 4 (For For Uno, Nano: pin 10. For MKR Zero SD: SDCARD_SS_PIN)
-
-  created   Nov 2010
-  by David A. Mellis
-  modified  24 July 2020
-  by Tom Igoe
-
-  This example code is in the public domain.
-
-*/
+#include <Wire.h>
+#include <SPI.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <random>
+#include <FS.h>
+#include "SPIFFS.h" // ESP32 only
+#include <Wire.h>
+#include <SPI.h>
+#include <WiFi.h>
+#include <ArduinoHttpClient.h>
+#include <PubSubClient.h>
+#include <random>
+#include <Update.h>
 #include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
 #include <NEO6M.h>
 
-NEO6M neo6m(14,12);
+NEO6M neo6m(14,27);
 void setup()
 {
   Serial.begin(9600);
@@ -35,14 +29,15 @@ void setup()
 void loop()
 {
 
-
-  Serial.println(neo6m.getGLL());
+unsigned long startTime = millis();
+  Serial.println(neo6m.getGLL2());
+  Serial.println(millis()-startTime);
   Serial.print("LATTITUDE: ");
-  Serial.println(neo6m.get(LATTITUDE));
+  Serial.println(neo6m.get(LATTITUDE_GPS));
   Serial.print("LONGITUDE: ");
-  Serial.println(neo6m.get(LONGITUDE));
+  Serial.println(neo6m.get(LONGITUDE_GPS));
   Serial.print("TIME: ");
-  Serial.println(neo6m.get(TIME));
+  Serial.println(neo6m.get(TIME_GPS_NEO));
 
 
   delay(2000);

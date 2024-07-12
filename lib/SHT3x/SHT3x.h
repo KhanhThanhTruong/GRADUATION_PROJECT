@@ -82,6 +82,7 @@ class SHT3x
     //Get checksum
     uint8_t getChecksum(uint8_t* data,size_t length);
     //Get temperature and humidity
+    //Return 0 if fail
     float get(DATA_SHT3x_TARGET target);
     //Set all data to zero
     void setalltozero();

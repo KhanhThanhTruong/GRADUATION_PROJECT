@@ -6,34 +6,34 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
-using namespace std;
+// using namespace std;
 
 
 enum NMEA_ATRIBUTE
 {
-    LATTITUDE,
-    LONGITUDE,
-    TIME
+    LATTITUDE_GPS,
+    LONGITUDE_GPS,
+    TIME_GPS_NEO
 };
 
 class NMEA_GLL
 {
 private:
     int GMT;
-    string GLL_STRING;
+    std::string GLL_STRING;
     double m_lat;
     double m_long;
-    string m_time;
+    std::string m_time;
     bool valid;
-    fstream output;
+    std::fstream output;
 
 public:
     // Constructor with GLL string and your GMT
-    NMEA_GLL(string buffer, int GMT);
+    NMEA_GLL(std::string buffer, int GMT);
 
-    // Getter LATTITUDE, LONGITUDE, TIME
+    // Getter LATTITUDE, LONGITUDE, TIME_GPS_NEO
     // Return # if error
-    string get(NMEA_ATRIBUTE obj);
+    std::string get(NMEA_ATRIBUTE obj);
 };
 
 #endif

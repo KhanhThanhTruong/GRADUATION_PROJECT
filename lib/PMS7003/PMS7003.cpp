@@ -98,7 +98,7 @@ void PMS7003::init()
     // Serial.begin(UART_BAUD_PMS7003);
     if (Serial.availableForWrite())
     {
-        Serial.println("PMS7003 init complete");
+        // Serial.println("PMS7003 init complete");
     }
     delay(TIME_WAIT_START);
 }
@@ -230,19 +230,22 @@ ERROR_DECODE_PMS7003 PMS7003::decodeData()
 uint16_t PMS7003::getData(DATA_TARGET target)
 {
     if (readBytesBaseOnMode() == nullptr)
-    {
+    {   
+        
         if (Serial.availableForWrite())
         {
-            Serial.println("ERROR: READ DATA FROM PMS7003 FAILED ");
+            // Serial.println("ERROR: READ DATA FROM PMS7003 FAILED ");
         }
+        return 0;
     }
 
     if (decodeData() != NO_ERROR_PMS)
     {
         if (Serial.availableForWrite())
         {
-            Serial.println("ERROR: DECODE DATA FROM PMS7003 FAILED ");
+            // Serial.println("ERROR: DECODE DATA FROM PMS7003 FAILED ");
         }
+        return 0;
     }
     switch (target)
     {

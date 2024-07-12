@@ -5,7 +5,7 @@
 #include <SoftwareSerial.h>
 
 #define BAUDARATE_A7680C 115200
-#define RESPONSE_TIMEOUT_A7680C 50
+#define RESPONSE_TIMEOUT_A7680C 1000
 #define COMMAND_TIMEOUT_A7680C 50
 #define a7680c_uart Serial2
 
@@ -26,6 +26,7 @@ public:
     bool checkResponse(String response);
     bool mqtt_publish(String topic, String message);
     bool mqtt_subscribe(String topic, int QoS);
+    bool clear_rx_tx_buffer();
     bool mqtt_client_idconfg(String id);
 };
 

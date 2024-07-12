@@ -159,7 +159,7 @@ void loop()
 
   // Telemetry
 
-//   sendTelemetry(temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
+  sendTelemetry(temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
 
   delay(5000);
 }
