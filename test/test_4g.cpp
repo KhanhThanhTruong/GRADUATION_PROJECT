@@ -50,7 +50,6 @@ void setup()
 
   // lte.restart();
   // const char *payload="{\"key\":15}";
-  
   if(!mqtt.connected())
   mqtt.connect("esp32","Thanh","123456","demo.thingsboard.io",1883);
   delay(500);

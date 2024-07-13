@@ -296,7 +296,10 @@ void display_tft_espi::begin()
     }
 
     state_function_icon[FUNCTION_ICON::WIFI] = true;
-    this->tft.init();
+    this->tft.begin();
+
+    
+
     this->tft.fillScreen(TFT_BLACK);
     this->tft.setRotation(ROTATION_TFT);
     this->tft.setTextSize(TEXT_SIZE);
@@ -425,43 +428,43 @@ void display_tft_espi::draw_sim_signal_icon(int x, int y, float percent)
     // tft.fillRect(x-4,y+4,9,2,ICON_BORDER_COLOR);
 }
 
-// Callback that is triggered when btn_component is clicked
-static void button_event_cb(lv_event_t *e)
-{
-}
+// // Callback that is triggered when btn_component is clicked
+// static void button_event_cb(lv_event_t *e)
+// {
+// }
 
-void display_home_page()
-{
-    int TITTLE_POSITION_X = 10;
-    int TITTLE_POSITION_Y_FIRST = 20;
-    int TITLE_WIDTH = 165;
-    int TITLE_HEIGHT = 18;
-    int BUTTON_WIDTH = 30;
-    int BUTTON_HEIGHT = 18;
-    int BUTTON_POSITION_X = -110;
-    int BUTTON_POSITION_Y_FIRST = 20;
-    // Create title display
-    lv_obj_t *tit[sizeof(title_display_tft) / sizeof(title_display_tft[0])];
-    for (int i = 0; i < sizeof(title_display_tft) / sizeof(title_display_tft[0]); i++)
-    {
-        lv_obj_t *tit_buf = lv_textarea_create(lv_scr_act());
-        tit[i] = tit_buf;
-        lv_obj_t *tit_label = lv_label_create(tit[i]);
-        lv_label_set_text(tit_label, title_display_tft[i]);
-        lv_obj_align(tit_label, LV_ALIGN_LEFT_MID, 0, 0);
+// void display_home_page()
+// {
+//     int TITTLE_POSITION_X = 10;
+//     int TITTLE_POSITION_Y_FIRST = 20;
+//     int TITLE_WIDTH = 165;
+//     int TITLE_HEIGHT = 18;
+//     int BUTTON_WIDTH = 30;
+//     int BUTTON_HEIGHT = 18;
+//     int BUTTON_POSITION_X = -110;
+//     int BUTTON_POSITION_Y_FIRST = 20;
+//     // Create title display
+//     lv_obj_t *tit[sizeof(title_display_tft) / sizeof(title_display_tft[0])];
+//     for (int i = 0; i < sizeof(title_display_tft) / sizeof(title_display_tft[0]); i++)
+//     {
+//         lv_obj_t *tit_buf = lv_textarea_create(lv_scr_act());
+//         tit[i] = tit_buf;
+//         lv_obj_t *tit_label = lv_label_create(tit[i]);
+//         lv_label_set_text(tit_label, title_display_tft[i]);
+//         lv_obj_align(tit_label, LV_ALIGN_LEFT_MID, 0, 0);
 
-        lv_obj_set_size(tit[i], TITLE_WIDTH, TITLE_HEIGHT);
-        lv_obj_align(tit[i], LV_ALIGN_TOP_LEFT, TITTLE_POSITION_X, TITTLE_POSITION_Y_FIRST * (i + 1));
-    }
+//         lv_obj_set_size(tit[i], TITLE_WIDTH, TITLE_HEIGHT);
+//         lv_obj_align(tit[i], LV_ALIGN_TOP_LEFT, TITTLE_POSITION_X, TITTLE_POSITION_Y_FIRST * (i + 1));
+//     }
 
-    // Create button
-    lv_obj_t *button_compo[sizeof(title_display_tft) / sizeof(title_display_tft[0])];
-    for (int i = 0; i < sizeof(title_display_tft) / sizeof(title_display_tft[0]); i++)
-    {
-        lv_obj_t *button_buf = lv_btn_create(lv_scr_act());
-        button_compo[i] = button_buf;
-        lv_obj_set_size(button_compo[i], 30, 18);
-        lv_obj_align(button_compo[i], LV_ALIGN_TOP_RIGHT, -110, 20 * (i + 1));
-        lv_obj_add_event_cb(button_compo[i], button_event_cb, LV_EVENT_CLICKED, NULL);
-    }
-}
+//     // Create button
+//     lv_obj_t *button_compo[sizeof(title_display_tft) / sizeof(title_display_tft[0])];
+//     for (int i = 0; i < sizeof(title_display_tft) / sizeof(title_display_tft[0]); i++)
+//     {
+//         lv_obj_t *button_buf = lv_btn_create(lv_scr_act());
+//         button_compo[i] = button_buf;
+//         lv_obj_set_size(button_compo[i], 30, 18);
+//         lv_obj_align(button_compo[i], LV_ALIGN_TOP_RIGHT, -110, 20 * (i + 1));
+//         lv_obj_add_event_cb(button_compo[i], button_event_cb, LV_EVENT_CLICKED, NULL);
+//     }
+// }

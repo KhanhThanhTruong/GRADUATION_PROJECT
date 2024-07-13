@@ -1,7 +1,7 @@
 #ifndef DISPLAY_TFTeSPI_H
 #define DISPLAY_TFTeSPI_H
 #include <TFT_eSPI.h>
-#include <lvgl.h>
+#include <SD.h>
 
 #define CO_x 20
 #define CO_y 0
