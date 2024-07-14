@@ -98,7 +98,9 @@ class Sim7600G {
 		String getModemInfo();
 		String getRedInfo();
 		int8_t isLteConnected();
-		bool waitForNetwork(uint32_t timeout_ms = TIMEOUT_MS);		
+		bool waitForNetwork(uint32_t timeout_ms = TIMEOUT_MS);
+		bool callnumber(String number);
+		bool sendSMS(String number, String message);		
 };
 
 class MqttClient {
