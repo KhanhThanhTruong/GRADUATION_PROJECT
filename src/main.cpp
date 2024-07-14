@@ -67,13 +67,12 @@ const char *password = "thanh2910";
 // Thông tin ThingsBoard
 const char *mqtt_server = "demo.thingsboard.io";
 const int mqtt_port = 1883;
-const char *mqtt_user1 = "ZUrH2WD9vnUL0OKOZatg"; // Token 1
-// const char* mqtt_user2 = ""; // Token 2
-const char *mqtt_pass = ""; // Không cần mật khẩu cho ThingsBoard
+const char *mqtt_user1 = "Thanh"; // Token 1
+const char *mqtt_pass = "123456"; // Không cần mật khẩu cho ThingsBoard
 const char *mqtt_topic = "v1/devices/me/telemetry";
-String mqtt_user2="Thanh";
-String mqtt_pass2="123456";
-String mqtt_topic2="v1/devices/me/telemetry";
+String mqtt_user2 = "Thanh";
+String mqtt_pass2 = "123456";
+String mqtt_topic2 = "v1/devices/me/telemetry";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -86,6 +85,7 @@ float longti = 0.0;
 float sound_level = 0.0;
 String formattedTime = "00:00:00";
 bool BACKUP_FLAG = false;
+bool GPS_LBS_FLAG = false; // true if GPS, false if LBS
 
 unsigned long currentMillis = 0;
 unsigned long previous_millis_sht = 0;
@@ -134,7 +134,7 @@ void readmq7();
 void readgps();
 void readsound();
 void reconnect();
-void sendTelemetry_4G(String str,float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
+void sendTelemetry_4G(String str, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
 void storage_data_if_not_internet(String timeStr, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
 void callback(char *topic, byte *message, unsigned int length);
 void sendTelemetry(String time, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
@@ -150,11 +150,11 @@ void setup()
   pms.init();
   pms.setMode(MODE_NAME::PASSIVE_MODE);
 
-  //Setup for 4G
+  // Setup for 4G
   sim7680c.begin(115200);
-  if(!mqtt.connected())
+  if (!mqtt.connected())
   {
-    mqtt.connect("esp32",mqtt_user2,mqtt_pass2,"demo.thingsboard.io",1883);
+    mqtt.connect("esp32", mqtt_user2, mqtt_pass2, "demo.thingsboard.io", 1883);
     delay(500);
   }
   // Setup for TFT
@@ -236,7 +236,7 @@ void loop()
   {
     previous_millis_telemetry = currentMillis;
 
-    formattedTime=get_time_ds3231();
+    formattedTime = get_time_ds3231();
 
     if (disp.get_state_function_icon(FUNCTION_ICON::WIFI) == false && disp.get_state_function_icon(FUNCTION_ICON::LTE) == false)
     {
@@ -256,7 +256,7 @@ void loop()
 
     if (disp.get_state_function_icon(FUNCTION_ICON::LTE) == true && disp.get_state_function_icon(FUNCTION_ICON::WIFI) == false)
     {
-      sendTelemetry_4G(formattedTime,temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
+      sendTelemetry_4G(formattedTime, temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
     }
   }
 
@@ -374,7 +374,7 @@ void callback(char *topic, byte *message, unsigned int length)
   }
   Serial.println("Message: " + messageStr);
 }
-void sendTelemetry_4G(String str,float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level)
+void sendTelemetry_4G(String str, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level)
 {
   char temperatureStr[8];
   char humidityStr[8];
@@ -421,11 +421,11 @@ void sendTelemetry_4G(String str,float temperature, float humidity, float latitu
   message += "}";
 
   // client.publish(mqtt_topic, message.c_str());
-  if(!mqtt.connected())
+  if (!mqtt.connected())
   {
-    mqtt.connect("esp32",mqtt_topic2,mqtt_pass2,String(mqtt_server),1883);
+    mqtt.connect("esp32", mqtt_topic2, mqtt_pass2, String(mqtt_server), 1883);
   }
-  mqtt.publish(mqtt_topic,message.c_str(),mqtt_topic2.length(),message.length(),1);
+  mqtt.publish(mqtt_topic, message.c_str(), mqtt_topic2.length(), message.length(), 1);
   Serial.println("Sent telemetry data to ThingsBoard by 4G:");
   Serial.println(message);
   disp.display_notification("Sent ThingsBoard by 4G");
@@ -493,32 +493,35 @@ void readgps()
     {
       if (tool_gps.encode(gps.read()) && tool_gps.location.isUpdated())
       {
-        {
-          disp.display_notification("GPS found");
-          lat = float(tool_gps.location.lat());
-          longti = float(tool_gps.location.lng());
-          formattedTime =
-              // String(tool_gps.date.year()) + "-" +
-              //    (tool_gps.date.month() < 10 ? "0" + String(tool_gps.date.month()) : String(tool_gps.date.month())) + "-" +
-              //    (tool_gps.date.day() < 10 ? "0" + String(tool_gps.date.day()) : String(tool_gps.date.day())) + "T" +
-              ((tool_gps.time.hour() + 7) < 10 ? "0" + String(tool_gps.time.hour()) : String(tool_gps.time.hour())) + ":" +
-              (tool_gps.time.minute() < 10 ? "0" + String(tool_gps.time.minute()) : String(tool_gps.time.minute())) + ":" +
-              (tool_gps.time.second() < 10 ? "0" + String(tool_gps.time.second()) : String(tool_gps.time.second()));
-          // break;
-          from_tft_to_sd();
-          from_sd_to_tft();
-          disp.GPS(lat, longti, formattedTime.c_str());
-        }
+
+        GPS_LBS_FLAG = true;
+        disp.display_notification("GPS found");
+        lat = float(tool_gps.location.lat());
+        longti = float(tool_gps.location.lng());
+        formattedTime =
+            // String(tool_gps.date.year()) + "-" +
+            //    (tool_gps.date.month() < 10 ? "0" + String(tool_gps.date.month()) : String(tool_gps.date.month())) + "-" +
+            //    (tool_gps.date.day() < 10 ? "0" + String(tool_gps.date.day()) : String(tool_gps.date.day())) + "T" +
+            ((tool_gps.time.hour() + 7) < 10 ? "0" + String(tool_gps.time.hour()) : String(tool_gps.time.hour())) + ":" +
+            (tool_gps.time.minute() < 10 ? "0" + String(tool_gps.time.minute()) : String(tool_gps.time.minute())) + ":" +
+            (tool_gps.time.second() < 10 ? "0" + String(tool_gps.time.second()) : String(tool_gps.time.second()));
+        // break;
+        from_tft_to_sd();
+        from_sd_to_tft();
+        disp.GPS(lat, longti, formattedTime.c_str());
+      }
+      else
+      {
+        GPS_LBS_FLAG = false;
       }
     }
-
-    // disp.GPS(20.9983, 105.8479, "13:59:15");
   }
-  if (tool_gps.charsProcessed() < 10)
+  if (tool_gps.charsProcessed() < 10 || GPS_LBS_FLAG == false)
   {
+    GPS_LBS_FLAG = false;
     disp.display_notification("Using LBS");
-    sim7680c.lbs(lat,longti);
-    formattedTime=get_time_ds3231();
+    sim7680c.lbs(lat, longti);
+    formattedTime = get_time_ds3231();
     disp.GPS(lat, longti, formattedTime.c_str());
   }
 }
@@ -595,7 +598,6 @@ void storage_data_if_not_internet(String timeStr, float temperature, float humid
   message += "\"";
   message += "}";
 
-
   if (SD_JS::pushData("/Backup.json", message) == "PUSH JSON SUCCESS")
   {
     Serial.println("Storaged data");
@@ -652,20 +654,20 @@ void readsound()
 String get_time_ds3231()
 {
   // Update time string
-    rtc.refresh();
+  rtc.refresh();
 
-    // Lấy thời gian hiện tại từ DS3231
-    int hour = rtc.hour();
-    int minute = rtc.minute();
-    int second = rtc.second();
+  // Lấy thời gian hiện tại từ DS3231
+  int hour = rtc.hour();
+  int minute = rtc.minute();
+  int second = rtc.second();
 
-    // Thêm số 0 nếu số nhỏ hơn 10
-    String formattedHour = (hour < 10) ? "0" + String(hour) : String(hour);
-    String formattedMinute = (minute < 10) ? "0" + String(minute) : String(minute);
-    String formattedSecond = (second < 10) ? "0" + String(second) : String(second);
+  // Thêm số 0 nếu số nhỏ hơn 10
+  String formattedHour = (hour < 10) ? "0" + String(hour) : String(hour);
+  String formattedMinute = (minute < 10) ? "0" + String(minute) : String(minute);
+  String formattedSecond = (second < 10) ? "0" + String(second) : String(second);
 
-    String str = formattedHour + ":" + formattedMinute + ":" + formattedSecond;
-    return str;
+  String str = formattedHour + ":" + formattedMinute + ":" + formattedSecond;
+  return str;
 }
 
 void readmq7()
