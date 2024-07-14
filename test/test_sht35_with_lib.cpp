@@ -18,6 +18,44 @@
   This example code is in the public domain.
 
 */
+
+#include <Wire.h>
+#include <SPI.h>
+#include <WiFi.h>
+#include <PubSubClient.h>
+#include <random>
+#include <FS.h>
+#include "SPIFFS.h" // ESP32 only
+#include <Wire.h>
+#include <SPI.h>
+#include <WiFi.h>
+#include <ArduinoHttpClient.h>
+#include <PubSubClient.h>
+#include <random>
+#include <Update.h>
+
+#include <SPI.h>
+#include <TFT_eSPI.h> // Hardware-specific library
+#include <Wire.h>
+#include <SD.h>
+
+#include "FS.h"
+
+#include <SPI.h>
+
+#include "SPI.h"
+// #include <Adafruit_ILI9341.h>
+// #include <display.h>
+#include <SHT3x.h>
+#include <PMS7003.h>
+#include <SD_mybuit.h>
+#include <display_tft_espi.h>
+#include <MQ7.h>
+#include <NEO6M.h>
+#include <SOUNDSENSOR.h>
+#include <SIMCOM7680C.h>
+#include <TinyGPSPlus.h>
+#include <uRTCLib.h>
 #include <SD.h>
 #include <SPI.h>
 #include <Wire.h>
@@ -36,6 +74,9 @@ void setup()
 
 void loop()
 {
+
+  sht.readBytes();
+  sht.decode();
 
   Serial.print("TEMPERATURE: ");
   Serial.println(sht.get(DATA_SHT3x_TARGET::TEMPERATURE_SHT));

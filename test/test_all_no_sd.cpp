@@ -36,6 +36,7 @@
 #include <SIMCOM7680C.h>
 #include <TinyGPSPlus.h>
 #include <uRTCLib.h>
+#include <Lte_SIM7600.h>
 
 #define UART_PMS7003_RX 26
 #define UART_PMS7003_TX 25
@@ -71,6 +72,9 @@ const char *mqtt_user1 = "ZUrH2WD9vnUL0OKOZatg"; // Token 1
 // const char* mqtt_user2 = ""; // Token 2
 const char *mqtt_pass = ""; // Không cần mật khẩu cho ThingsBoard
 const char *mqtt_topic = "v1/devices/me/telemetry";
+String mqtt_user2="Thanh";
+String mqtt_pass2="123456";
+String mqtt_topic2="v1/devices/me/telemetry";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -108,7 +112,8 @@ hw_timer_t *timer = NULL;
 A7680C a7680c;
 TinyGPSPlus tool_gps;
 uRTCLib rtc(0x68);
-
+Sim7600G sim7680c;
+MqttClient mqtt;
 IRAM_ATTR void isr_sound()
 {
   SOUND_FLAG = true;
@@ -130,6 +135,7 @@ void readmq7();
 void readgps();
 void readsound();
 void reconnect();
+void sendTelemetry_4G(String str,float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
 void storage_data_if_not_internet(String timeStr, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
 void callback(char *topic, byte *message, unsigned int length);
 void sendTelemetry(String time, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level);
@@ -137,7 +143,7 @@ void setup()
 {
   Serial.begin(9600);
   // Setup for 4G
-  a7680c.begin(115200);
+  // a7680c.begin(115200);
   // Setup for SHT3x
   sht.init();
   sht.setMode(MODE_SHT_SINGLESHOT);
@@ -145,6 +151,13 @@ void setup()
   pms.init();
   pms.setMode(MODE_NAME::PASSIVE_MODE);
 
+  //Setup for 4G
+  sim7680c.begin(115200);
+  if(!mqtt.connected())
+  {
+    mqtt.connect("esp32",mqtt_user2,mqtt_pass2,"demo.thingsboard.io",1883);
+    delay(500);
+  }
   // Setup for TFT
   disp.begin();
   disp.background();
@@ -179,8 +192,6 @@ void loop()
 {
   currentMillis = millis();
   // Response touch
-  from_tft_to_sd();
-  from_sd_to_tft();
   disp.process_touch();
   // Backup data
   if (currentMillis - previous_millis_backup >= SAMPLE_BACKUP && disp.get_state_function_icon(FUNCTION_ICON::WIFI) == true)
@@ -195,6 +206,8 @@ void loop()
   // Measure CO if detect
   if (MQ7_FLAG == true && currentMillis - previous_millis_isr_mq7 >= SAMPLE_ISR_MQ7)
   {
+    previous_millis_isr_mq7 = currentMillis;
+    MQ7_FLAG = false;
     readmq7();
   }
   // Measrue temp and hum
@@ -205,6 +218,7 @@ void loop()
   // Measure CO
   if (currentMillis - previous_millis_mq7 >= SAMPLE_MQ7)
   {
+    previous_millis_mq7 = currentMillis;
     readmq7();
   }
   // Location
@@ -256,7 +270,7 @@ void loop()
 
     if (disp.get_state_function_icon(FUNCTION_ICON::LTE) == true && disp.get_state_function_icon(FUNCTION_ICON::WIFI) == false)
     {
-      // sendTelemetry_4G(temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
+      sendTelemetry_4G(formattedTime,temperature, humidity, lat, longti, pm1_0, pm2_5, pm10, co, sound_level);
     }
   }
 
@@ -296,20 +310,20 @@ void loop()
 void backup()
 {
   previous_millis_backup = millis();
-  Serial.println("Backup data");
-  from_tft_to_sd();
-  String msg = readAndRemoveLine("/Backup.json");
-  Serial.println(msg);
-  if (msg != "FILE NOT EXIST" && msg != "ERROR" && msg != "FILE REMOVED")
-  {
-    if (!client.connected() || WiFi.status() != WL_CONNECTED)
-    {
-      reconnect();
-    }
-    client.loop();
-    client.publish(mqtt_topic, msg.c_str());
-    disp.display_notification("Backup data");
-  }
+  // Serial.println("Backup data");
+  // from_tft_to_sd();
+  // String msg = readAndRemoveLine("/Backup.json");
+  // Serial.println(msg);
+  // if (msg != "FILE NOT EXIST" && msg != "ERROR" && msg != "FILE REMOVED")
+  // {
+  //   if (!client.connected() || WiFi.status() != WL_CONNECTED)
+  //   {
+  //     reconnect();
+  //   }
+  //   client.loop();
+  //   client.publish(mqtt_topic, msg.c_str());
+  //   disp.display_notification("Backup data");
+  // }
 }
 
 void reconnect()
@@ -372,7 +386,62 @@ void callback(char *topic, byte *message, unsigned int length)
   }
   Serial.println("Message: " + messageStr);
 }
+void sendTelemetry_4G(String str,float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level)
+{
+  char temperatureStr[8];
+  char humidityStr[8];
+  char latitudeStr[8];
+  char longitudeStr[8];
+  char pm1_0Str[8];
+  char pm2_5Str[8];
+  char pm10Str[8];
+  char coStr[8];
+  char soundLevelStr[8];
 
+  dtostrf(temperature, 1, 2, temperatureStr);
+  dtostrf(humidity, 1, 2, humidityStr);
+  dtostrf(latitude, 1, 2, latitudeStr);
+  dtostrf(longitude, 1, 2, longitudeStr);
+  dtostrf(pm1_0, 1, 2, pm1_0Str);
+  dtostrf(pm2_5, 1, 2, pm2_5Str);
+  dtostrf(pm10, 1, 2, pm10Str);
+  dtostrf(co, 1, 2, coStr);
+  dtostrf(sound_level, 1, 2, soundLevelStr);
+
+  String message = "{\"temperature\":";
+  message += temperatureStr;
+  message += ",\"humidity\":";
+  message += humidityStr;
+  message += ",\"latitude\":";
+  message += latitudeStr;
+  message += ",\"longitude\":";
+  message += longitudeStr;
+  message += ",\"pm1_0\":";
+  message += pm1_0Str;
+  message += ",\"pm2_5\":";
+  message += pm2_5Str;
+  message += ",\"pm10\":";
+  message += pm10Str;
+  message += ",\"co\":";
+  message += coStr;
+  message += ",\"sound_level\":";
+  message += soundLevelStr;
+  message += ",\"time\":";
+  message += "\"";
+  message += str;
+  message += "\"";
+  message += "}";
+
+  // client.publish(mqtt_topic, message.c_str());
+  if(!mqtt.connected())
+  {
+    mqtt.connect("esp32",mqtt_topic2,mqtt_pass2,String(mqtt_server),1883);
+  }
+  mqtt.publish(mqtt_topic,message.c_str(),mqtt_topic2.length(),message.length(),1);
+  Serial.println("Sent telemetry data to ThingsBoard by 4G:");
+  Serial.println(message);
+  disp.display_notification("Sent ThingsBoard by 4G");
+}
 void sendTelemetry(String timeStr, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level)
 {
   char temperatureStr[8];
@@ -448,7 +517,7 @@ void readgps()
               (tool_gps.time.minute() < 10 ? "0" + String(tool_gps.time.minute()) : String(tool_gps.time.minute())) + ":" +
               (tool_gps.time.second() < 10 ? "0" + String(tool_gps.time.second()) : String(tool_gps.time.second()));
           // break;
-          from_tft_to_sd ();
+          from_tft_to_sd();
           from_sd_to_tft();
           disp.GPS(lat, longti, formattedTime.c_str());
         }
@@ -466,56 +535,56 @@ void readgps()
 void from_tft_to_sd()
 {
   // Kết thúc giao tiếp với màn hình TFT
-  disp.end();
+  // disp.end();
 
-  digitalWrite(TFT_CS, HIGH);   // Bỏ chọn màn hình TFT
-  digitalWrite(TOUCH_CS, HIGH); // Bỏ chọn cảm ứng (nếu có)
-  digitalWrite(SD_CS, LOW);     // Chọn thẻ SD
+  // digitalWrite(TFT_CS, HIGH);   // Bỏ chọn màn hình TFT
+  // digitalWrite(TOUCH_CS, HIGH); // Bỏ chọn cảm ứng (nếu có)
+  // digitalWrite(SD_CS, LOW);     // Chọn thẻ SD
 
-  if (!SD.begin(SD_CS, (disp.get_tft())->getSPIinstance()))
-  {
-    Serial.println("Failed to begin SD");
-  }
+  // if (!SD.begin(SD_CS, (disp.get_tft())->getSPIinstance()))
+  // {
+  //   Serial.println("Failed to begin SD");
+  // }
 }
 
 void from_sd_to_tft()
 {
-  SD.end();
-  digitalWrite(TFT_CS, LOW);   // Chọn màn hình TFT
-  digitalWrite(TOUCH_CS, LOW); // Chọn cảm ứng (nếu có)
-  digitalWrite(SD_CS, HIGH);     // bo chọn thẻ SD
-  disp.init();
+  // SD.end();
+  // digitalWrite(TFT_CS, LOW);   // Chọn màn hình TFT
+  // digitalWrite(TOUCH_CS, LOW); // Chọn cảm ứng (nếu có)
+  // digitalWrite(SD_CS, HIGH);     // bo chọn thẻ SD
+  // disp.init();
 }
 
 void storage_data_if_not_internet(String timeStr, float temperature, float humidity, float latitude, float longitude, float pm1_0, float pm2_5, float pm10, float co, float sound_level)
 {
-  from_tft_to_sd();
+  // from_tft_to_sd();
 
-  StaticJsonDocument<200> js;
-  js["temperature"] = temperature;
-  js["humidity"] = humidity;
-  js["PM1_0"] = pm1_0;
-  js["PM2_5"] = pm2_5;
-  js["PM10"] = pm10;
-  js["CO"] = co;
-  js["sound_level"] = sound_level;
-  js["latitude"] = lat;
-  js["longitude"] = longti;
-  js["time"] = timeStr.c_str();
+  // StaticJsonDocument<200> js;
+  // js["temperature"] = temperature;
+  // js["humidity"] = humidity;
+  // js["PM1_0"] = pm1_0;
+  // js["PM2_5"] = pm2_5;
+  // js["PM10"] = pm10;
+  // js["CO"] = co;
+  // js["sound_level"] = sound_level;
+  // js["latitude"] = lat;
+  // js["longitude"] = longti;
+  // js["time"] = timeStr.c_str();
 
-  if (SD_JS::pushData("/Backup.json", js) == "PUSH JSON SUCCESS")
-  {
-    Serial.println("Storaged data");
-    from_sd_to_tft();
-    BACKUP_FLAG = true;
-    disp.display_notification("Storaged data");
-  }
-  else
-  {
-    Serial.println("Storage failed");
-    from_sd_to_tft();
-    disp.display_notification("Storaged data failed");
-  }
+  // if (SD_JS::pushData("/Backup.json", js) == "PUSH JSON SUCCESS")
+  // {
+  //   Serial.println("Storaged data");
+  //   from_sd_to_tft();
+  //   BACKUP_FLAG = true;
+  //   disp.display_notification("Storaged data");
+  // }
+  // else
+  // {
+  //   Serial.println("Storage failed");
+  //   from_sd_to_tft();
+  //   disp.display_notification("Storaged data failed");
+  // }
 }
 
 void readsound()
@@ -558,7 +627,6 @@ void readsound()
 
 void readmq7()
 {
-  MQ7_FLAG = false;
   // Đo ngay lập tức khi có ngắt
   if (temperature == 0 || humidity == 0)
   {
@@ -571,7 +639,6 @@ void readmq7()
   from_tft_to_sd();
   from_sd_to_tft();
   disp.cacborn_mono(co);
-  previous_millis_isr_mq7 = currentMillis;
 }
 
 void readSHT()
@@ -605,90 +672,90 @@ void readPMS()
 String readAndRemoveLine(const char *fileName)
 {
 
-  from_tft_to_sd();
-  // Kiểm tra xem file có tồn tại không
-  if (!SD.exists(fileName))
-  {
-    Serial.println("File does not exist");
-    from_sd_to_tft();
-    BACKUP_FLAG = false;
-    return "FILE NOT EXIST";
-  }
+  // from_tft_to_sd();
+  // // Kiểm tra xem file có tồn tại không
+  // if (!SD.exists(fileName))
+  // {
+  //   Serial.println("File does not exist");
+  //   from_sd_to_tft();
+  //   BACKUP_FLAG = false;
+  //   return "FILE NOT EXIST";
+  // }
 
-  File file = SD.open(fileName, FILE_READ);
-  if (!file)
-  {
-    Serial.println("Failed to open file for reading");
-    from_sd_to_tft();
-    return "ERROR";
-  }
+  // File file = SD.open(fileName, FILE_READ);
+  // if (!file)
+  // {
+  //   Serial.println("Failed to open file for reading");
+  //   from_sd_to_tft();
+  //   return "ERROR";
+  // }
 
-  // Kiểm tra xem file có rỗng hay không
-  if (file.size() == 0)
-  {
-    Serial.println("File is empty");
-    file.close();
-    from_sd_to_tft();
-    return "ERROR";
-  }
+  // // Kiểm tra xem file có rỗng hay không
+  // if (file.size() == 0)
+  // {
+  //   Serial.println("File is empty");
+  //   file.close();
+  //   from_sd_to_tft();
+  //   return "ERROR";
+  // }
 
-  String firstLine = "";
-  if (file.available())
-  {
-    firstLine = file.readStringUntil('\n');
-    Serial.print("Read line: ");
-    Serial.println(firstLine);
-  }
-  else
-  {
-    file.close();
-    from_sd_to_tft();
-    return "ERROR";
-  }
-  file.close();
+  // String firstLine = "";
+  // if (file.available())
+  // {
+  //   firstLine = file.readStringUntil('\n');
+  //   Serial.print("Read line: ");
+  //   Serial.println(firstLine);
+  // }
+  // else
+  // {
+  //   file.close();
+  //   from_sd_to_tft();
+  //   return "ERROR";
+  // }
+  // file.close();
 
-  // Đọc toàn bộ nội dung trừ dòng đầu tiên
-  file = SD.open(fileName, FILE_READ);
-  String remainingContent = "";
-  bool firstLineSkipped = false;
-  while (file.available())
-  {
-    String line = file.readStringUntil('\n');
-    if (firstLineSkipped)
-    {
-      remainingContent += line + "\n";
-    }
-    else
-    {
-      firstLineSkipped = true;
-    }
-  }
-  file.close();
+  // // Đọc toàn bộ nội dung trừ dòng đầu tiên
+  // file = SD.open(fileName, FILE_READ);
+  // String remainingContent = "";
+  // bool firstLineSkipped = false;
+  // while (file.available())
+  // {
+  //   String line = file.readStringUntil('\n');
+  //   if (firstLineSkipped)
+  //   {
+  //     remainingContent += line + "\n";
+  //   }
+  //   else
+  //   {
+  //     firstLineSkipped = true;
+  //   }
+  // }
+  // file.close();
 
-  // Ghi lại nội dung đã đọc trừ dòng đầu tiên
-  file = SD.open(fileName, FILE_WRITE);
-  if (!file)
-  {
-    Serial.println("Failed to open file for writing");
-    from_sd_to_tft();
-    return "ERROR";
-  }
-  file.print(remainingContent);
-  file.close();
+  // // Ghi lại nội dung đã đọc trừ dòng đầu tiên
+  // file = SD.open(fileName, FILE_WRITE);
+  // if (!file)
+  // {
+  //   Serial.println("Failed to open file for writing");
+  //   from_sd_to_tft();
+  //   return "ERROR";
+  // }
+  // file.print(remainingContent);
+  // file.close();
 
-  // Kiểm tra nếu tệp tin rỗng và xóa nó
-  if (remainingContent.length() == 0)
-  {
-    SD.remove(fileName);
-    Serial.println("File is empty, deleted the file.");
-    from_sd_to_tft();
-    BACKUP_FLAG = false;
-    return "FILE REMOVED";
-  }
-  else
-  {
-    Serial.println("Removed the first line from the file.");
-  }
-  from_sd_to_tft();
-  return firstLine;
+  // // Kiểm tra nếu tệp tin rỗng và xóa nó
+  // if (remainingContent.length() == 0)
+  // {
+  //   SD.remove(fileName);
+  //   Serial.println("File is empty, deleted the file.");
+  //   from_sd_to_tft();
+  //   BACKUP_FLAG = false;
+  //   return "FILE REMOVED";
+  // }
+  // else
+  // {
+  //   Serial.println("Removed the first line from the file.");
+  // }
+  // from_sd_to_tft();
+  // return firstLine;
 }

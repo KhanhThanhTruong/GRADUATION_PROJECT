@@ -1,6 +1,6 @@
 #include <SD_mybuit.h>
 
-String SD_JS::pushData(const char *filename, StaticJsonDocument<200> js)
+String SD_JS::pushData(const char *filename, String js_str)
 {
     // SD.begin(5);
     // if the file doesn't exist, create it
@@ -17,8 +17,8 @@ String SD_JS::pushData(const char *filename, StaticJsonDocument<200> js)
     }
 
     // if the file opened okay, write to it
-    String js_str;
-    serializeJson(js, js_str);
+    // String js_str;
+    // serializeJson(js, js_str);
     myFile.println(js_str);
     // Check write error
     if (myFile.getWriteError())
@@ -33,19 +33,19 @@ String SD_JS::pushData(const char *filename, StaticJsonDocument<200> js)
 
 String SD_JS::pushData(StaticJsonDocument<200> js)
 { // 2024-05-28T10:00:00Z
-    std::string time_str = js["time"];
-    std::string filename = "/" + time_str.substr(0, 4) +
-                           "/" + time_str.substr(5, 2) + "/" +
-                           time_str.substr(8, 2) + "/" + time_str.substr(11, 2) + ".json";
-    if (!SD.exists(filename.c_str()))
-    {
-        SD_JS::creatfile(filename);
-        return SD_JS::pushData(filename.c_str(), js);
-    }
-    else
-    {
-        return SD_JS::pushData(filename.c_str(), js);
-    }
+    // std::string time_str = js["time"];
+    // std::string filename = "/" + time_str.substr(0, 4) +
+    //                        "/" + time_str.substr(5, 2) + "/" +
+    //                        time_str.substr(8, 2) + "/" + time_str.substr(11, 2) + ".json";
+    // if (!SD.exists(filename.c_str()))
+    // {
+    //     SD_JS::creatfile(filename);
+    //     return SD_JS::pushData(filename.c_str(), js);
+    // }
+    // else
+    // {
+    //     return SD_JS::pushData(filename.c_str(), js);
+    // }
 }
 
 String SD_JS::getData(const char *filename, StaticJsonDocument<200> &js)

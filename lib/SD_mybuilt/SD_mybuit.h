@@ -30,7 +30,7 @@ namespace SD_JS
 
     // Function push json data to file "filename" in SD card
     // File name must start with /
-    String pushData(const char *filename, StaticJsonDocument<200> js);
+    String pushData(const char *filename, String js_str);
     String pushData(StaticJsonDocument<200> js);
     // Function read json data from file "filename" in SD card
     String getData(const char *filename, StaticJsonDocument<200> &js);
