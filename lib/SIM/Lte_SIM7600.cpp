@@ -93,6 +93,40 @@ bool Sim7600G::sendSMS(String number, String message)
   }
 }
 
+String Sim7600G::lbs(float &latitude, float &longitude)
+{
+  sendAT("+CLBS=1");
+  if(waitResponse(1000L) != 1)
+  {
+    return "ERROR";
+  }
+  streamSkipUntil(':');
+
+  String input=LTE.readStringUntil('\n');
+
+  // Tìm vị trí của dấu phẩy đầu tiên
+  int firstCommaIndex = input.indexOf(',');
+
+  // Tìm vị trí của dấu phẩy thứ hai
+  int secondCommaIndex = input.indexOf(',', firstCommaIndex + 1);
+
+  // Tìm vị trí của dấu phẩy thứ ba
+  int thirdCommaIndex = input.indexOf(',', secondCommaIndex + 1);
+
+  // Lấy vĩ độ từ vị trí sau dấu phẩy đầu tiên đến dấu phẩy thứ hai
+  String latitude_str = input.substring(firstCommaIndex + 1, secondCommaIndex);
+
+  // Lấy kinh độ từ vị trí sau dấu phẩy thứ hai đến dấu phẩy thứ ba
+  String longitude_str = input.substring(secondCommaIndex + 1, thirdCommaIndex);
+
+  // Chuyển đổi chuỗi sang float (nếu cần)
+  latitude = latitude_str.toFloat();
+  longitude = longitude_str.toFloat();
+  
+  return input;
+
+}
+
 bool Sim7600G::restart()
 {
   for (uint32_t start = millis(); millis() - start < 1000L;)

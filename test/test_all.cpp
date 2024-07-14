@@ -126,6 +126,7 @@ IRAM_ATTR void isr_mq7()
 String readAndRemoveLine(const char *fileName);
 void from_sd_to_tft();
 void from_tft_to_sd();
+String get_time_ds3231();
 void backup();
 void readSHT();
 void readPMS();
@@ -235,20 +236,7 @@ void loop()
   {
     previous_millis_telemetry = currentMillis;
 
-    // Update time string
-    rtc.refresh();
-
-    // Lấy thời gian hiện tại từ DS3231
-    int hour = rtc.hour();
-    int minute = rtc.minute();
-    int second = rtc.second();
-
-    // Thêm số 0 nếu số nhỏ hơn 10
-    String formattedHour = (hour < 10) ? "0" + String(hour) : String(hour);
-    String formattedMinute = (minute < 10) ? "0" + String(minute) : String(minute);
-    String formattedSecond = (second < 10) ? "0" + String(second) : String(second);
-
-    String formattedTime = formattedHour + ":" + formattedMinute + ":" + formattedSecond;
+    formattedTime=get_time_ds3231();
 
     if (disp.get_state_function_icon(FUNCTION_ICON::WIFI) == false && disp.get_state_function_icon(FUNCTION_ICON::LTE) == false)
     {
@@ -528,7 +516,10 @@ void readgps()
   }
   if (tool_gps.charsProcessed() < 10)
   {
-    disp.display_notification("GPS not found");
+    disp.display_notification("Using LBS");
+    sim7680c.lbs(lat,longti);
+    formattedTime=get_time_ds3231();
+    disp.GPS(lat, longti, formattedTime.c_str());
   }
 }
 
@@ -656,6 +647,25 @@ void readsound()
     number_sound_triger = 0;
     sound_level = 0;
   }
+}
+
+String get_time_ds3231()
+{
+  // Update time string
+    rtc.refresh();
+
+    // Lấy thời gian hiện tại từ DS3231
+    int hour = rtc.hour();
+    int minute = rtc.minute();
+    int second = rtc.second();
+
+    // Thêm số 0 nếu số nhỏ hơn 10
+    String formattedHour = (hour < 10) ? "0" + String(hour) : String(hour);
+    String formattedMinute = (minute < 10) ? "0" + String(minute) : String(minute);
+    String formattedSecond = (second < 10) ? "0" + String(second) : String(second);
+
+    String str = formattedHour + ":" + formattedMinute + ":" + formattedSecond;
+    return str;
 }
 
 void readmq7()

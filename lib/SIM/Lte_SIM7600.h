@@ -100,7 +100,8 @@ class Sim7600G {
 		int8_t isLteConnected();
 		bool waitForNetwork(uint32_t timeout_ms = TIMEOUT_MS);
 		bool callnumber(String number);
-		bool sendSMS(String number, String message);		
+		bool sendSMS(String number, String message);
+		String lbs(float &latitude,float &longitude);		
 };
 
 class MqttClient {
